@@ -1,0 +1,195 @@
+<template>
+    <div>
+        <div class="content-wrapper">
+            <div class="admin-page-title bg-white p-3">
+                <i class="el-icon-s-home"></i>
+                <span> / Users / Update User</span>
+            </div>            
+            <div class="container-fluid pb-5">
+                
+                <div class="admin-conent my-5 mx-3 p-4">
+                    <el-button size="small" class="mb-4" type="primary" @click.native="$router.push('/admin/tags/users')">Back</el-button>
+                    <div class="bg-white p-4">
+                        <h1>Update User</h1>      
+                        <div class="row">
+                            <div class="col-sm-12 col-md-12">
+                                <div class="ann-content">
+                                    <p class="mb-2 font-weight-bold">First Name <span class="required-item">*</span></p>
+                                    <el-input class="mb-4" readonly placeholder="Enter first name" v-model="first_name"></el-input>
+
+                                    <p class="mb-2 font-weight-bold">Last Name <span class="required-item">*</span></p>
+                                    <el-input class="mb-4" readonly placeholder="Enter last name" v-model="last_name"></el-input>
+
+                                    <p class="mb-2 font-weight-bold">Email <span class="required-item">*</span></p>
+                                    <el-input class="mb-4" readonly placeholder="Enter email address" v-model="email"></el-input>
+
+                                    <p class="mb-2 font-weight-bold">Tag <span class="required-item">*</span></p>
+                                    <el-select v-model="tag_id" placeholder="Select" class="w-100 mb-4">
+                                        <el-option
+                                            v-for="tag in tagsOpt"
+                                            :key="tag.tag_id"
+                                            :label="tag.label"
+                                            :value="tag.tag_id">
+                                        </el-option>
+                                    </el-select>
+
+                                </div>
+
+                                <el-button class="mt-5" type="primary" @click="saveUser">Save</el-button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+
+
+export default {
+    data() {
+        return {
+            tags: [],
+            tagsOpt: [],            
+            user_id: this.$route.query.id,
+            first_name: '',
+            last_name: '',
+            email: '',
+            tag_id: '',
+            token: '',
+            apiDomain: this.$store.state.apiUrl
+        }
+    },
+    methods: {
+        getUser() {
+            axios.get(this.apiDomain + `/api/attendees/${this.user_id}`, {
+                headers: { Authorization: "Bearer " + this.token }
+            })
+            .then(response => {
+                // console.log(response)
+                if(response.data) {
+                    this.first_name = response.data.data.first_name
+                    this.last_name = response.data.data.last_name
+                    this.email = response.data.data.email
+                    this.tag_id = response.data.data.tag_id
+                }
+            })
+            .catch(error => {
+                // console.log(error)
+            })
+
+        },      
+        saveUser() {
+
+            if (!this.email) {
+                this.$message.error('Please provide a valid email address.')
+            } else {            
+
+                axios.put(this.apiDomain + `/api/attendees/update/${this.user_id}`, {
+                    tag_id: this.tag_id},
+                    {
+                    headers: { Authorization: "Bearer " + this.token }
+                })
+                .then(response => {
+                    // console.log(response)
+                    this.$message.success('User successfully updated.')
+                    this.$router.push('/admin/tags/users')
+                })
+                .catch(error => {
+                    this.$message.error('User could not be updated. Please try again.')
+                    // console.log(error)
+                })
+
+            }
+
+        },
+        getTokenCookie() {
+            var token = 'token'
+            var match = document.cookie.match(new RegExp('(^| )' + token + '=([^;]+)'))
+            if (match) {
+                this.token = match[2].replace('%7C', '|')
+                // console.log(this.token)
+            }
+            else {
+                // console.log('No token found');
+            }
+        },
+        getAllTags() {
+            axios.get(this.apiDomain + `/api/all/tags`, {
+                headers: { Authorization: "Bearer " + this.token }
+            })
+			.then(res => {
+				if(res.data) {
+                    this.tags = res.data.data;
+                    this.tags.forEach(element => {
+                        if (element.id !== 1) {
+                            this.tagsOpt.push({ label: element.tag_name, tag_id: element.id })
+                        }
+                    })
+                }
+			})
+			.catch(err => {
+				// console.log(err);
+			})
+        },        
+    },
+	mounted() {
+        this.getTokenCookie()
+        this.getAllTags()
+        this.getUser()
+	}
+}
+</script>
+
+<style>
+
+.content-wrapper {
+    padding-top: 65px;
+}
+
+.ann-sidebar button {
+    width:100%;
+}
+.ann-sidebar .el-card__header {
+    font-weight:bold;
+    color:#174A84;
+}
+.ann-featured-upload,
+.ann-featured-upload .el-upload,
+.ann-featured-upload img {
+    width:100%;
+}
+.blank-featured-img {
+    border:1px solid #DCDFE6;
+    border-radius:4px;
+    width:100%;
+    padding:8px 10px;
+}
+.msg-img-thumb {
+    border:1px solid #DCDFE6;
+    margin-bottom:10px;
+    padding:10px;
+}
+.msg-img-change {
+    color:#131313;
+    font-style: italic;
+}
+.el-tiptap-editor__content strong {
+    font-weight: bold;
+}
+.admin-conent .el-tiptap-editor__content h1 {
+    font-size:2.5rem!important;
+    color:#000;
+    margin-top:20px!important;
+    margin-bottom:20px!important;
+    font-weight: normal;
+}
+.ann-char-count {
+    padding:10px;
+    border:1px solid #ebeef5;
+}
+</style>
